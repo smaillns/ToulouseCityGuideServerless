@@ -1,0 +1,64 @@
+service: algiers-city-guide-api
+
+frameworkVersion: "2"
+
+custom:
+  spotTableName: "spots-table-${self:provider.stage}"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: "20201221"
+  stage: dev
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt: [SpotsTable, Arn]
+  environment:
+    SPOTS_TABLE: ${self:custom.spotTableName}
+    SPOT_INDEX_TABLE: SPOTS-INDEX
+
+functions:
+  api:
+    handler: handler.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY
+
+resources:
+  Resources:
+    SpotsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: categoryName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+          - AttributeName: categoryName
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.SPOT_INDEX_TABLE}
+            KeySchema:
+              - AttributeName: categoryName
+                KeyType: HASH
+            Projection:
+              ProjectionType: "ALL"
+        TableName: ${self:custom.spotTableName}
+        BillingMode: PAY_PER_REQUEST
