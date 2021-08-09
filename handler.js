@@ -5,56 +5,118 @@ const serverless = require("serverless-http");
 const app = express();
 
 const SPOTS_TABLE = process.env.SPOTS_TABLE;
+const VIDEOS_TABLE = process.env.VIDEOS_TABLE;
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient();
 
 app.use(express.json());
 
-app.get("/spots/:spotId", async function (req, res) {
+
+app.get("/spots", async function (req, res) {
   const params = {
     TableName: SPOTS_TABLE,
-    Key: {
-      id: req.params.spotId,
-    },
   };
 
   try {
-    const { Item } = await dynamoDbClient.get(params).promise();
-    if (Item) {
-      const { userId, name } = Item;
-      res.json({ spotId, name });
+    const { Items } = await dynamoDbClient.scan(params).promise();
+    if (Items) {
+      res.json(Items);
     } else {
       res
         .status(404)
-        .json({ error: 'Could not find user with provided "userId"' });
+        .json({ error: 'Could not fetch data' });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Could not retreive user" });
+    res.status(500).json({ error: "error" });
   }
 });
 
-app.post("/spots", async function (req, res) {
-  const { id, name } = req.body;
-  if (typeof id !== "string") {
-    res.status(400).json({ error: '"Id" must be a string' });
-  } else if (typeof name !== "string") {
-    res.status(400).json({ error: '"name" must be a string' });
-  }
-
+app.get("/spots/nbr", async function (req, res) {
   const params = {
     TableName: SPOTS_TABLE,
-    Item: {
-      id: id,
-      categoryName: name,
-    },
   };
 
   try {
-    await dynamoDbClient.put(params).promise();
-    res.json({ id, name });
+    const { Count } = await dynamoDbClient.scan(params).promise();
+    if (Count) {
+      res.json({ nbr: Count});
+    } else {
+      res
+        .status(404)
+        .json({ error: 'Could not fetch data' });
+    }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Could not create user" });
+    res.status(500).json({ error: "error" });
+  }
+});
+
+
+
+// app.post("/spots", async function (req, res) {
+//   const { id, name } = req.body;
+//   if (typeof id !== "string") {
+//     res.status(400).json({ error: '"Id" must be a string' });
+//   } else if (typeof name !== "string") {
+//     res.status(400).json({ error: '"name" must be a string' });
+//   }
+
+//   const params = {
+//     TableName: SPOTS_TABLE,
+//     Item: {
+//       id: id,
+//       categoryName: name,
+//     },
+//   };
+
+//   try {
+//     await dynamoDbClient.put(params).promise();
+//     res.json({ id, name });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ error: "Could not create user" });
+//   }
+// });
+
+
+
+app.get("/videos", async function (req, res) {
+  const params = {
+    TableName: VIDEOS_TABLE,
+  };
+
+  try {
+    const { Items } = await dynamoDbClient.scan(params).promise();
+    if (Items) {
+      res.json(Items);
+    } else {
+      res
+        .status(404)
+        .json({ error: 'Could not fetch data' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "error" });
+  }
+});
+
+app.get("/videos/nbr", async function (req, res) {
+  const params = {
+    TableName: VIDEOS_TABLE,
+  };
+
+  try {
+    const { Count } = await dynamoDbClient.scan(params).promise();
+    if (Count) {
+      res.json({ nbr: Count});
+    } else {
+      res
+        .status(404)
+        .json({ error: 'Could not fetch data' });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "error" });
   }
 });
 
