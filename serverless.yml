@@ -1,17 +1,18 @@
 org: smaillns
-app: algiers-city-guide-api
-service: algiers-city-guide-api
+app: toulouse-city-guide-api
+service: toulouse-city-guide-api
 
 frameworkVersion: "2"
 
 custom:
-  spotTableName: "spots-table-${self:provider.stage}"
-  videoTableName: "videos-table-${self:provider.stage}"
+  spotTableName: "tcg-spots-table-${self:provider.stage}"
+  videoTableName: "tcg-videos-table-${self:provider.stage}"
 
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: "20201221"
+  region: "eu-west-3"
   stage: dev
   iam:
     role:
